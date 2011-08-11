@@ -1,0 +1,118 @@
+<?php
+
+/**
+ * @file
+ * An API and schema to store, retrieve and calculate uniqueness for Drupal content.
+ * 
+ */
+
+// Content type definitions
+define('UNIQUE_TYPE_NODE', 'node');
+define('UNIQUE_TYPE_NODE', 'user');
+define('UNIQUE_TYPE_MESSAGE', 'message');
+define('UNIQUE_TYPE_ANY', 'any');
+
+// Field definitions
+define('UNIQUE_FIELD_TITLE', 'title');
+define('UNIQUE_FIELD_AUTHOR', 'name');
+define('UNIQUE_FIELD_LANGUAGE', 'language');
+define('UNIQUE_FIELD_TAXONOMY', 'taxonomy:');
+
+/**
+ * Check content for uniqueness
+ *
+ * @param string $content
+ *   A string or number to check for uniqueness
+ *
+ * @param array $params
+ *   An array of parameters corresponding to the method used to determine uniqueness
+ */
+function uqapi_is_unique($content, &$params) {
+  
+  //Set default to strip spaces
+  if(! $params['strip_spaces']){
+	$params['strip_spaces'] = TRUE;
+  }
+  
+  if(strlen($content) < 1){
+	 drupal_set_message(t('Content compared for uniqueness must be at least one character long.'), 'error');
+	 return NULL;
+  }
+
+  return _uqapi_check_keys($content, $params);
+}
+
+/**
+ * NOT YET IMPLEMENTED: Check an array of content for uniqueness in one database call
+ *
+ * @param array $content
+ *   An array of content strings or integers to check for uniqueness
+ *
+ * @param array $params
+ *   An array of parameters corresponding to the method used to determine uniqueness
+ */
+function uqapi_are_unique($content, &$params) {
+  //XXX: NOT YET IMPLEMENTED
+  drupal_set_message(t('Function are_unique not yet implemented.'), 'error');
+  exit;
+}
+
+
+/**
+ * Private function for checking uniqueness
+ *
+ * @param string/array $content
+ *   A string or array or strings or numbers to check for uniqueness
+ *
+ * @param array $params
+ *   An array of parameters corresponding to the method used to determine uniqueness
+ *
+ * @return
+ *   TRUE if one value is being tested.
+ *   An array of boolean values if an array of values is being tested.
+ */
+function _uqapi_check_keys($content, $params) {
+  
+  $keys = array();
+  if( is_array($content) ){
+	foreach ($content as $value){
+	  array_push($keys, _uqapi_create_key ($value, $params));
+	}
+  }
+  else {
+	array_push($keys, _uqapi_create_key ($value, $params));
+  }
+  
+  return _uqapi_look_up_keys($keys);
+}
+
+/**
+ * Private function for creating content keys
+ *
+ * @param string $content
+ *   A string for which a key is created
+ *
+ * @param array $params
+ *   An array of parameters corresponding to the method used to determine uniqueness
+ *
+ * @return
+ *   A key representing a given content string
+ */
+function _uqapi_create_key ($content, $params) {
+  if( $params['strip_spaces'] ){
+	  //Set the unique_key to the first 255 characters of the string, WITHOUT spaces
+	  $content = preg_replace('/\s+/', '', $content);
+      return substr($content, 255);
+  }
+  else {
+	//Set the unique_key to the first 255 characters of the string, WITH spaces
+    return substr($content, 255);
+  }
+}
+
+function _uqapi_look_up_keys($keys) {
+  //XXX: NOT YET IMPLEMENTED
+  drupal_set_message(t('Function are_unique not yet implemented.'), 'error');
+  exit;
+  //Add DB lookups here:
+}

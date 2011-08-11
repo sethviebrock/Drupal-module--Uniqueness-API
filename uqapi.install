@@ -1,0 +1,41 @@
+<?php
+/**
+ * @file
+ * Installation file for the Unique API module.
+ */
+
+/**
+ * We need key-value lookup:
+ * 
+ * We'll look up a given value in varchar format by a unique ID to identify content,
+ * and a value that represents that content. We also should keep track of what type
+ * a given value is (whether it's a node, a message, etc), and what field to match against
+ * in that particular type.
+ * 
+ */
+
+function uqapi_schema() {
+  $schema['uqapi_keyval'] = array(
+    'fields' => array(
+      'unique_id' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+      'unique_key' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+      'unique_value' => array('type' => 'blob'),
+      'unique_type' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+      'unique_field' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+    ),
+    'primary key' => array('unique_id'),
+    'indexes' => array(
+      'unique_id' => array('unique_id'),
+      'unique_key' => array('unique_key'),
+    ),
+  );
+  return $schema; 
+}
+
+function uqapi_install() {
+  drupal_install_schema('uqapi');
+}
+
+function uqapi_uninstall() {
+  drupal_uninstall_schema('uqapi');
+}

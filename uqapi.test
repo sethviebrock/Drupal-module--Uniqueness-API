@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Simpletest case for uniqueapi module.
+ *
+ * Verify example module functionality.
+ */
+
+/**
+ * Functionality tests for email example module.
+ */
+class UniqueAPITestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Unique API',
+      'description' => 'Verify that content can be checked for uniqueness.',
+    );
+  }
+
+  function setUp(){
+    // Enable the Unique API module.
+    parent::setUp('uqapi');
+  }
+
+  /**
+   * Verify the functionality of the Unique API module.
+   */
+  function testStringComparison() {
+    // Create and login user.
+    $account = $this->drupalCreateUser();
+    $this->drupalLogin($account);
+
+    $language = language_default();
+
+    // Verify that email address is invalid and email was not sent.
+    $this->assertText(t('Example 1'), t('Example 2'));
+    $this->assertTrue(!count($this->someFunction()), t('Test output.'));
+    $this->assertEqual(
+      $some['thing'],
+      t('Some text @variable', array('@variable' => variable_get('variable_name', 'value')), $language->language),
+      t('Another bit of text.')
+    );
+    
+  }
+}
+
+
+
