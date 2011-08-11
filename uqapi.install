@@ -19,9 +19,8 @@ function uqapi_schema() {
     'fields' => array(
       'unique_id' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
       'unique_key' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
-      'unique_value' => array('type' => 'blob'),
-      'unique_type' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
-      'unique_field' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+      'value' => array('type' => 'blob'),
+      'content_type' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
     ),
     'primary key' => array('unique_id'),
     'indexes' => array(

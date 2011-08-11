@@ -22,12 +22,23 @@ define('UNIQUE_FIELD_TAXONOMY', 'taxonomy:');
  * Check content for uniqueness
  *
  * @param string $content
- *   A string or number to check for uniqueness
+ *   A string or integer to check for uniqueness
  *
- * @param array $params
- *   An array of parameters corresponding to the method used to determine uniqueness
+ * @param string $content_type_identifier (OPTIONAL)
+ * 		An arbitrary string to identify this piece of content (i.e. 'message', 'blog_node_title', etc)
+ * 		It is up to you to provide a string to identify your content. If you do
+ * 		not provide a string, the content will be tested for uniqueness systemwide.
+ *
+ * @param array $params (OPTIONAL)
+ *   An array of parameters corresponding to the method used to determine uniqueness.
+ *
+ *   $params['strip_spaces'] - Set to FALSE if you do not want spaces stripped/disregarded
+ *   	(i.e. if spaces are significant to uniqueness)
+ *
+ * @return boolean 
+ *   A boolean value, whether the given value is unique or not.
  */
-function uqapi_is_unique($content, &$params) {
+function uqapi_is_unique($content, $content_type_identifier, &$params) {
   
   //Set default to strip spaces
   if(! $params['strip_spaces']){
@@ -38,8 +49,8 @@ function uqapi_is_unique($content, &$params) {
 	 drupal_set_message(t('Content compared for uniqueness must be at least one character long.'), 'error');
 	 return NULL;
   }
-
-  return _uqapi_check_keys($content, $params);
+  
+  return array_pop( _uqapi_check_keys($content, $params) );
 }
 
 /**
@@ -48,8 +59,17 @@ function uqapi_is_unique($content, &$params) {
  * @param array $content
  *   An array of content strings or integers to check for uniqueness
  *
+ * @param string $content_type_identifier (OPTIONAL)
+ * 		An arbitrary string to identify this piece of content (i.e. 'message', 'blog_node_title', etc)
+ * 		It is up to you to provide a string to identify your content. If you do
+ * 		not provide a string, the content will be tested for uniqueness systemwide.
+ *
  * @param array $params
- *   An array of parameters corresponding to the method used to determine uniqueness
+ *   An array of parameters corresponding to the method used to determine uniqueness.
+ *   See function uqapi_is_unique() above for more details.
+ *
+ * @return array @booleans
+ *   An array of boolean values, in order in which the array of content values was passed.
  */
 function uqapi_are_unique($content, &$params) {
   //XXX: NOT YET IMPLEMENTED
@@ -67,11 +87,10 @@ function uqapi_are_unique($content, &$params) {
  * @param array $params
  *   An array of parameters corresponding to the method used to determine uniqueness
  *
- * @return
- *   TRUE if one value is being tested.
- *   An array of boolean values if an array of values is being tested.
+ * @return array 
+ *   An array of boolean values.
  */
-function _uqapi_check_keys($content, $params) {
+function _uqapi_check_keys($content, $content_type_identifier, &$params) {
   
   $keys = array();
   if( is_array($content) ){
@@ -110,9 +129,22 @@ function _uqapi_create_key ($content, $params) {
   }
 }
 
+/**
+ * Private function for looking up unique keys
+ *
+ * @param array $keys
+ *
+ * @return array $booleans
+ *   An array of boolean values
+ */
 function _uqapi_look_up_keys($keys) {
-  //XXX: NOT YET IMPLEMENTED
-  drupal_set_message(t('Function are_unique not yet implemented.'), 'error');
-  exit;
-  //Add DB lookups here:
+  
+  $result = db_query( 'SELECT unique_id FROM {uqapi_keyval} WHERE unique_key IN (' . db_placeholders($keys, 'varchar') . ')' );
+  
+  $matches = array();
+  while ($content = db_fetch_object($result)) {
+	array_push($matches, TRUE);
+  }
+  
+  return $matches;
 }
