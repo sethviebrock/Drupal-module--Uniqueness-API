@@ -3,26 +3,23 @@
 /**
  * @file
  * An API and schema to store, retrieve and calculate uniqueness for Drupal content.
- * 
+ *
+ * The API stores a key that represents the content that you would like to
+ * remain unique across the site. The key is limited to 255 characters to provide
+ * for efficient lookup and comparison. The value is also stored It provides two core functions:
+ * uqapi_is_unique() and uqapi_are_unique(). Details can be found below.
+ *
+ * An example migth be blog node titles -- you do not want any duplicate
+ * blog node titles to be submitted. Therefore, you would call uqapi_is_unique()
+ * in hook_nodeapi() when $node->type == 'blog'. 
+ *
  */
-
-// Content type definitions
-define('UNIQUE_TYPE_NODE', 'node');
-define('UNIQUE_TYPE_NODE', 'user');
-define('UNIQUE_TYPE_MESSAGE', 'message');
-define('UNIQUE_TYPE_ANY', 'any');
-
-// Field definitions
-define('UNIQUE_FIELD_TITLE', 'title');
-define('UNIQUE_FIELD_AUTHOR', 'name');
-define('UNIQUE_FIELD_LANGUAGE', 'language');
-define('UNIQUE_FIELD_TAXONOMY', 'taxonomy:');
 
 /**
  * Check content for uniqueness
  *
  * @param string $content
- *   A string or integer to check for uniqueness
+ * 		A string or integer to check for uniqueness
  *
  * @param string $content_type_identifier (OPTIONAL)
  * 		An arbitrary string to identify this piece of content (i.e. 'message', 'blog_node_title', etc)
@@ -30,10 +27,10 @@ define('UNIQUE_FIELD_TAXONOMY', 'taxonomy:');
  * 		not provide a string, the content will be tested for uniqueness systemwide.
  *
  * @param array $params (OPTIONAL)
- *   An array of parameters corresponding to the method used to determine uniqueness.
+ * 		An array of parameters corresponding to the method used to determine uniqueness.
  *
- *   $params['strip_spaces'] - Set to FALSE if you do not want spaces stripped/disregarded
- *   	(i.e. if spaces are significant to uniqueness)
+ *   	$params['strip_spaces'] - Set to FALSE if you do not want spaces stripped
+ *   		(i.e. if spaces are significant to uniqueness)
  *
  * @return boolean 
  *   A boolean value, whether the given value is unique or not.
