@@ -2,9 +2,12 @@ Provides an API and schema to store, retrieve and calculate uniqueness for Drupa
 
 The API stores a key that represents the content that you would like to
 remain unique across the site. The key is limited to 255 characters to provide
-for efficient lookup and comparison. The value is also stored It provides two core functions:
-uqapi_is_unique() and uqapi_are_unique(). Details can be found below.
+for efficient lookup and comparison. The entire value of the content is also
+stored, in the case that there are more than one identical 255-character keys but
+unique content values. It provides two core functions: uqapi_is_unique() and
+uqapi_are_unique(). Function arguments can be found in the module.
 
-An example migth be blog node titles -- you do not want any duplicate
+An example might be blog node titles -- you do not want any duplicate
 blog node titles to be submitted. Therefore, you would call uqapi_is_unique()
-on $node->title in hook_nodeapi() when $node->type == 'blog'. 
+on $node->title in hook_nodeapi() when $node->type == 'blog'. There is an example
+of this in the .module file.
