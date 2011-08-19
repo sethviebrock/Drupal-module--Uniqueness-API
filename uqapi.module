@@ -6,70 +6,73 @@
  */
 
 /**
- * Check content for uniqueness
+ * Check value for uniqueness
  *
- * @param string $content
+ * @param string $value
  * 		A string or integer to check for uniqueness
  *
- * @param string $content_id (optional)
+ * @param string $value_id (optional)
  * 		An arbitrary string (up to 255 characters) to identify this piece of
  * 		content (i.e. 'message', 'blog_node_title', etc) It is up to you to
  * 		provide a string to identify your content. If you do not provide a
  * 		string, the content will be tested for uniqueness systemwide.
- *
- * @param array $params (optional)
- * 		An array of parameters corresponding to the method used to determine uniqueness.
- *
- *   	$params['strip_spaces'] - Set to FALSE if you do not want spaces stripped
- *   		(i.e. if spaces are significant to uniqueness)
  *
  * @return boolean 
  *   A boolean value, whether the given value is unique or not.
  *
  * @see uqapi_are_unique
  */
-function uqapi_is_unique($content, $content_id = NULL, &$params = array()) {
+function uqapi_is_unique($value, $value_id = NULL) {
   
-  //Set default to strip spaces
-  if(! $params['strip_spaces']){
-	$params['strip_spaces'] = TRUE;
-  }
+  //Strip spaces from content and make lowercase, by default. (We can add params later to specify this behavior, if necessary)
+  $value = strtolower( preg_replace('/\s+/', '', $value) );
   
-  if(strlen($content) < 1){
+  if(strlen($value) < 1){
 	watchdog('Uniqueness API', 'Content compared for uniqueness must be at least one character long');
 	return NULL;
   }
   
-  $result = _uqapi_check_and_store_key($content, $params);
+  return _uqapi_check_and_store_key($value, $value_id);
 }
 
 /**
  * Private function for checking and storing uniqueness
  *
- * @param string $content
- *   A string to check for uniqueness
- *
- * @param array $params
- *   An array of parameters corresponding to the method used to determine uniqueness
- *
  * @return boolean $boolean 
  *   A boolean value, whether the given value is unique or not.
  */
-function _uqapi_check_and_store_key($content, $content_id = NULL, &$params = array()) {
+function _uqapi_check_and_store_key($value, $value_id) {
   
-  $key = _uqapi_create_key($content, $params);
+  $key = _uqapi_create_key($value, $value_id);
+  $matches = _uqapi_look_up_key($key);
   
-  if( _uqapi_look_up_key($key) ){
-	//If there are more than one key matches, we have to go in and check the $content
-	//to see if there is an exact match (based on any $params)
-	return FALSE;//For now
-  }
-  else {
-	if(isset($content_id)){
-	  db_query("INSERT INTO {uqapi_keyval} (unique_key, value, content_id) VALUES ('%s', '%s', '%s')", $key, $content, $content_id);
+  //Delay more intensive lookup until edge case (more than one unique key):
+  if($matches){
+	//If there are more than one key matches, we have to go in and check the $value
+	//to see if there is an exact match
+	if( count($matches) > 1) {
+	  
+	  $results = db_query("SELECT unique_id FROM {uqapi_keyval} WHERE value = '$value' AND unique_id IN (" . db_placeholders($matches) . ")", $matches);
+	  $result = db_fetch_object($result);
+	  
+	  //Do we have an exact match for this content / is this content not unique?
+	  if($result) {
+		return FALSE;//This content is not unique
+	  }
+	  else {
+		return TRUE;//This content IS unique
+	  }
 	}
 	else {
-	  db_query("INSERT INTO {uqapi_keyval} (unique_key, value, content_id) VALUES ('%s', '%s')", $key, $content);
+	  return FALSE;//This content is not unique
+	}
+  }
+  else {
+	if($value_id){
+	  db_query("INSERT INTO {uqapi_keyval} (unique_key, value, value_id) VALUES ('%s', '%s', '%s')", $key, $value, $value_id);
+	}
+	else {
+	  db_query("INSERT INTO {uqapi_keyval} (unique_key, value) VALUES ('%s', '%s')", $key, $value);
 	}
 	return TRUE;
   }
@@ -78,60 +81,31 @@ function _uqapi_check_and_store_key($content, $content_id = NULL, &$params = arr
 /**
  * Private function for creating content keys
  *
- * @param string $content
- *   A string for which a key is created
- *
- * @param array $params
- *   An array of parameters corresponding to the method used to determine uniqueness
- *
  * @return
  *   A key representing a given content string
  */
-function _uqapi_create_key($content, $params = array()) {
-  if(isset($params['strip_spaces']) && $params['strip_spaces'] == FALSE){
-	  //Set the unique_key to the first 255 characters of the string, WITH spaces, lowercase
-      return strtolower( substr($content, 0, 255) );
-  }
-  else {
-	//Set the unique_key to the first 255 characters of the string, WITHOUT spaces, lowercase
-	  $content = preg_replace('/\s+/', '', $content);
-	
-    return strtolower( substr($content, 0, 255) );
-  }
+function _uqapi_create_key($value, $value_id) {
+	//Append the value_id to the beginning of the $value string.
+	//Then, create a unique key from the first 255 characters of the concatenated
+	//string, lowercase:
+	$value_id .= "::";
+    return substr($value_id . $value, 0, 255);
 }
 
 /**
  * Private function for looking up unique keys
  *
- * @param string $key
- *
- * @return boolean $boolean
- *   A boolean value, indicating uniqueness
+ * @return array $matches
+ *   An array of the unique_id entries for all matches
  */
 function _uqapi_look_up_key($key) {
   
-  $result = db_query("SELECT unique_id FROM {uqapi_keyval} WHERE unique_key = '%s'", $key);
+  $results = db_query("SELECT unique_id FROM {uqapi_keyval} WHERE unique_key = '%s'", $key);
   
   $matches = array();
-  while ($content = db_fetch_object($result)) {
-	array_push($matches, TRUE);
+  while ($result = db_fetch_object($results)) {
+	array_push($matches, $result->unique_id);
   }
   
   return $matches;
 }
-
-/**
- * Example implementation, using hook_nodeapi
- *
- */
-/*
-function uqapi_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  switch ($op) {
-    case 'validate':
-      if ($node->type == 'blog' && !uqapi_is_unique($node->title)) {
-        form_set_error('title', t('Please create a blog title that is unique.'));
-      }
-      break;
-  }
-}
-*/

@@ -20,13 +20,13 @@ function uqapi_schema() {
       'unique_id' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
       'unique_key' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
       'value' => array('type' => 'blob'),
-      'content_id' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+      'value_id' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
     ),
     'primary key' => array('unique_id'),
     'indexes' => array(
       'unique_id' => array('unique_id'),
       'unique_key' => array('unique_key'),
-      'content_id' => array('content_id'),
+      'value_id' => array('value_id'),
     ),
   );
   return $schema; 

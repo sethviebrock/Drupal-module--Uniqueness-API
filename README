@@ -9,5 +9,18 @@ uqapi_are_unique(). Function arguments can be found in the module.
 
 An example might be blog node titles -- you do not want any duplicate
 blog node titles to be submitted. Therefore, you would call uqapi_is_unique()
-on $node->title in hook_nodeapi() when $node->type == 'blog'. There is an example
-of this in the .module file.
+on $node->title in hook_nodeapi() when $node->type == 'blog'. See the example below.
+
+/**
+ * Example implementation, using hook_nodeapi
+ *
+ */
+function uqapi_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'validate':
+      if ($node->type == 'blog' && !uqapi_is_unique($node->title, 'blog_title')){
+        form_set_error('title', t('Please create a blog title that is unique.'));
+      }
+      break;
+  }
+}
