@@ -1,4 +1,3 @@
 name = Uniqueness API
 description = Provides an API and schema to store, retrieve and calculate uniqueness for Drupal content.
 core = 6.x
-
